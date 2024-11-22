@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEIF LM Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            word-wrap: break-word;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background-color: #6A5ACD;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .ai-message {
+            align-self: flex-start;
+            background-color: #E6E6FA;
+            color: black;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background-color: #E6E6FA;
+            border-radius: 15px;
+            max-width: 80px;
+            margin-bottom: 10px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #333;
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            background-color: white;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        #message-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            margin-left: 10px;
+        }
+        
+        #send-btn {
+            background-color: #5D3FD3;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        #send-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        #image-upload {
+            display: none;
+        }
+        
+        .input-actions {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+        
+        .uploaded-image {
+            max-width: 100px;
+            max-height: 100px;
+            margin-right: 10px;
+            border-radius: 10px;
+        }
+        
+        .image-preview {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .remove-image {
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 600px) {
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div id="chat-messages" class="chat-messages">
+            <div class="message ai-message">
+                مرحبا بكم في هذا النموذج اللغوي الذي يعمل بالذكاء الإصطناعي من تطوير SEIF LM
+            </div>
+        </div>
+        
+        <div class="image-preview" id="image-preview" style="display: none;">
+            <img id="preview-image" class="uploaded-image" src="" alt="Preview">
+            <button class="remove-image" onclick="removeImage()">×</button>
+        </div>
+        
+        <div class="chat-input">
+            <div class="input-actions">
+                <label for="image-upload">
+                    <span style="cursor: pointer;">📷</span>
+                </label>
+                <input type="file" id="image-upload" accept="image/*" onchange="handleImageUpload()">
+            </div>
+            <input type="text" id="message-input" placeholder="اكتب رسالتك هنا...">
+            <button id="send-btn" onclick="sendMessage()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const GEMINI_API_KEY = 'AIzaSyCUAiMR9w06BElxi8SK4JYCcJ4yuyMcLeA';
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+        let uploadedImage = null;
+
+        function createTypingIndicator() {
+            const messagesContainer = document.getElementById('chat-messages');
+            const typingIndicator = document.createElement('div');
+            typingIndicator.id = 'typing-indicator';
+            typingIndicator.classList.add('message', 'ai-message', 'typing-indicator');
+            
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('typing-dot');
+                typingIndicator.appendChild(dot);
+            }
+            
+            messagesContainer.appendChild(typingIndicator);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function addMessage(message, type, imageUrl = null) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', type);
+            
+            if (imageUrl) {
+                const imageElement = document.createElement('img');
+                imageElement.src = imageUrl;
+                imageElement.style.maxWidth = '200px';
+                imageElement.style.borderRadius = '10px';
+                messageElement.appendChild(imageElement);
+            }
+            
+            const textElement = document.createElement('div');
+            textElement.textContent = message;
+            messageElement.appendChild(textElement);
+            
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            const imagePreview = document.getElementById('image-preview');
+            
+            if (!message && !uploadedImage) return;
+
+            // Add user message
+            if (message) {
+                addMessage(message, 'user-message');
+            }
+            
+            // Add uploaded image to messages if exists
+            if (uploadedImage) {
+                addMessage('', 'user-message', uploadedImage);
+            }
+            
+            input.value = '';
+            imagePreview.style.display = 'none';
+            
+            // Show typing indicator
+            createTypingIndicator();
+            
+            try {
+                const contents = [];
+                
+                // Add image if uploaded
+                if (uploadedImage) {
+                    const base64Image = uploadedImage.split(',')[1];
+                    contents.push({
+                        parts: [
+                            {
+                                inlineData: {
+                                    mimeType: 'image/jpeg',
+                                    data: base64Image
+                                }
+                            },
+                            { text: message || 'صف محتوى هذه الصورة' }
+                        ]
+                    });
+                } else {
+                    // Text-only message
+                    contents.push({
+                        parts: [{ text: message }]
+                    });
+                }
+
+                const response = await fetch(
+                    `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ contents })
+                    }
+                );
+
+                const result = await response.json();
+                
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                if (result.candidates && result.candidates.length > 0) {
+                    const aiReply = result.candidates[0].content.parts[0].text;
+                    addMessage(aiReply, 'ai-message');
+                }
+                
+                // Reset uploaded image
+                uploadedImage = null;
+            } catch (error) {
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                addMessage('حدث خطأ، يرجى المحاولة مرة أخرى', 'ai-message');
+                console.error(error);
+            }
+        }
+
+        document.getElementById('message-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function handleImageUpload() {
+            const fileInput = document.getElementById('image-upload');
+            const file = fileInput.files[0];
+            const previewImage = document.getElementById('preview-image');
+            const imagePreview = document.getElementById('image-preview');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    uploadedImage = event.target.result;
+                    previewImage.src = uploadedImage;
+                    imagePreview.style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeImage() {
+            uploadedImage = null;
+            const imagePreview = document.getElementById('image-preview');
+            imagePreview.style.display = 'none';
+            document.getElementById('image-upload').value = '';
+        }
+    </script>
+</body>
+</html>
